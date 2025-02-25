@@ -26,8 +26,47 @@ export default function RootLayout({ children }) {
                   }
                 }
               }
+              
+              // Run immediately
               removeInjectAttr();
+              
+              // Run when DOM is ready
               document.addEventListener('DOMContentLoaded', removeInjectAttr);
+              
+              // Run after a short delay
+              setTimeout(removeInjectAttr, 0);
+              setTimeout(removeInjectAttr, 100);
+              
+              // Set up a MutationObserver to continuously monitor
+              if (typeof MutationObserver !== 'undefined') {
+                var observer = new MutationObserver(function(mutations) {
+                  for (var i = 0; i < mutations.length; i++) {
+                    var mutation = mutations[i];
+                    if (mutation.type === 'attributes' && 
+                        mutation.attributeName === 'inject_newvt_svd') {
+                      mutation.target.removeAttribute('inject_newvt_svd');
+                    }
+                  }
+                  // Also do a full sweep
+                  removeInjectAttr();
+                });
+                
+                // Start observing once body is available
+                var startObserver = function() {
+                  if (document.body) {
+                    observer.observe(document.body, { 
+                      attributes: true, 
+                      childList: true, 
+                      subtree: true,
+                      attributeFilter: ['inject_newvt_svd']
+                    });
+                  } else {
+                    setTimeout(startObserver, 100);
+                  }
+                };
+                
+                startObserver();
+              }
             })();
           `}
         </Script>

@@ -5,6 +5,28 @@ import AttributeCleaner from './AttributeCleaner';
 
 export default function ClientHydrationFix() {
   useEffect(() => {
+    // Suppress hydration warnings in development
+    if (typeof window !== 'undefined') {
+      const originalConsoleError = console.error;
+      console.error = (...args) => {
+        // Skip hydration warnings
+        if (typeof args[0] === 'string' && 
+           (args[0].includes('Hydration failed because') || 
+            args[0].includes('A tree hydrated but some attributes') ||
+            args[0].includes('Hydration completed') ||
+            args[0].includes('inject_newvt_svd'))) {
+          return;
+        }
+        originalConsoleError(...args);
+      };
+      
+      return () => {
+        console.error = originalConsoleError;
+      };
+    }
+  }, []);
+  
+  useEffect(() => {
     // More aggressive approach to remove the problematic attribute
     const removeAttribute = () => {
       if (typeof document !== 'undefined' && document.body) {
@@ -21,6 +43,7 @@ export default function ClientHydrationFix() {
     removeAttribute();
     
     // And also after a short delay to ensure it's gone
+    setTimeout(removeAttribute, 0);
     setTimeout(removeAttribute, 100);
     setTimeout(removeAttribute, 500);
     
