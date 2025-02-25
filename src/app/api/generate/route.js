@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { generateBusinessJargon } from '../../../utils/generator';
 
+// Add this for static export compatibility
+export const dynamic = 'force-static';
+
 export async function POST(request) {
   try {
     const { intensity = 5, businessSchoolMode = false, includeEmojis = true } = await request.json();
