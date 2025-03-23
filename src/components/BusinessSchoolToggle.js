@@ -3,7 +3,7 @@
 export default function BusinessSchoolToggle({ enabled, onChange }) {
   return (
     <div className="flex items-center justify-between w-full mb-6">
-      <label htmlFor="business-school-toggle" className="text-lg font-semibold text-gray-800">
+      <label htmlFor="business-school-toggle" className="text-lg font-medium text-[#1a1a1a]">
         Business School Mode
       </label>
       
@@ -18,7 +18,7 @@ export default function BusinessSchoolToggle({ enabled, onChange }) {
         <label
           htmlFor="business-school-toggle"
           className={`block overflow-hidden h-6 rounded-full ${
-            enabled ? 'bg-blue-600' : 'bg-gray-300'
+            enabled ? 'bg-[#0066ff]' : 'bg-gray-300'
           } cursor-pointer transition-colors duration-200 ease-in-out`}
         >
           <span
@@ -30,10 +30,10 @@ export default function BusinessSchoolToggle({ enabled, onChange }) {
       </div>
       
       {enabled && (
-        <div className="absolute right-0 mt-12 bg-blue-100 text-blue-800 text-xs font-medium py-1 px-2 rounded-lg">
+        <div className="absolute right-0 mt-12 bg-[#e6f0ff] text-[#0066ff] text-xs font-medium py-1 px-3 rounded-lg shadow-sm">
           Using HBS case studies & frameworks
         </div>
       )}
     </div>
   );
-} 
+}

@@ -1,43 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 246, 248, 250;
-  --background-end-rgb: 241, 243, 245;
+  --background: #ffffff;
+  --text-primary: #1a1a1a;
+  --text-muted: #999999;
+  --accent: #0066ff;
+  --border: #e5e7eb;
+  --panel-bg: #f9fafb;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
+  background-color: var(--background);
 }
 
-/* Fix for SVG sizing issues */
-svg {
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
+.container-max {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
 }
 
-/* Custom styles for the app */
-.animate-bounce {
-  animation: bounce 1s infinite;
+.btn-primary {
+  @apply bg-[#0066ff] text-white font-medium py-3 px-5 rounded-lg transition-all;
 }
 
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(-25%);
-    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
-  }
-  50% {
-    transform: translateY(0);
-    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
-  }
-} 
+.btn-primary:hover {
+  @apply transform scale-[1.03] shadow-md;
+}
+
+.panel {
+  @apply bg-white rounded-lg shadow-md p-6;
+}
+
+.section-title {
+  @apply text-lg font-semibold mb-4;
+}

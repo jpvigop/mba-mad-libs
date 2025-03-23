@@ -3,14 +3,13 @@ import {
   nouns,
   adjectives,
   outcomes,
-  businessFrameworks,
-  caseStudies,
   corporateAcronyms,
   templates,
-  businessSchoolTemplates,
   hashTags,
   emojis
 } from '../data/wordLists';
+
+import { getPersonaInstance } from '../models/Persona';
 
 // Helper function to get a random element from an array
 const getRandomElement = (array) => {
@@ -40,110 +39,105 @@ const replaceTemplatePlaceholder = (template, placeholder, wordList) => {
 // Main function to generate business jargon
 export function generateBusinessJargon({
   intensity = 5,
-  businessSchoolMode = false,
-  includeEmojis = true
+  includeEmojis = true,
+  personaName = "General"
 }) {
+  // Get the appropriate persona
+  const persona = getPersonaInstance(personaName);
+  
+  // Get persona-specific vocabulary and style
+  const personaBiases = persona.getBiases();
+  const personaStyle = persona.getStyle();
+  
+  // Use persona style to override includeEmojis if specified
+  if (personaStyle.emojis !== undefined) {
+    includeEmojis = personaStyle.emojis && includeEmojis; // Respect both persona and user preference
+  }
+  
   // Adjust values based on intensity (1-10 scale)
   const adjustedIntensity = Math.min(Math.max(intensity, 1), 10);
   
-  // Use business school templates 100% of the time in business school mode,
-  // otherwise use regular templates
+  // Get template
   let result = '';
   
-  if (businessSchoolMode && Math.random() < 0.8) {
-    result = getRandomElement(businessSchoolTemplates);
-    result = replaceTemplatePlaceholder(result, 'caseStudy', caseStudies);
-    result = replaceTemplatePlaceholder(result, 'framework', businessFrameworks);
-  } else {
-    result = getRandomElement(templates);
-  }
+  // Use persona-specific templates
+  const templates = persona.getTemplates();
+  result = getRandomElement(templates);
 
-  // Replace basic template placeholders
-  result = replaceTemplatePlaceholder(result, 'verb', verbs);
-  result = replaceTemplatePlaceholder(result, 'noun', nouns);
-  result = replaceTemplatePlaceholder(result, 'adjective', adjectives);
-  result = replaceTemplatePlaceholder(result, 'outcome', outcomes);
+  // Replace basic template placeholders with persona-specific vocabulary
+  result = replaceTemplatePlaceholder(result, 'verb', personaBiases.verbs);
+  result = replaceTemplatePlaceholder(result, 'noun', personaBiases.nouns);
+  result = replaceTemplatePlaceholder(result, 'adjective', personaBiases.adjectives);
+  result = replaceTemplatePlaceholder(result, 'outcome', personaBiases.outcomes);
   
   // Add corporate acronyms based on intensity
-  const acronymCount = Math.floor(adjustedIntensity / 3);
-  if (acronymCount > 0) {
-    const selectedAcronyms = getRandomItems(corporateAcronyms, acronymCount);
-    result = result.replace(/\. $/, '') + ' ' + selectedAcronyms.join(' ') + '.';
+  if (personaStyle.prefersMetrics) {
+    const acronymCount = Math.floor(adjustedIntensity / 2); // More acronyms for metric-focused personas
+    if (acronymCount > 0) {
+      const selectedAcronyms = getRandomItems(corporateAcronyms, acronymCount);
+      result = result.replace(/\. $/, '') + ' ' + selectedAcronyms.join(' ') + '.';
+    }
+  } else {
+    const acronymCount = Math.floor(adjustedIntensity / 3);
+    if (acronymCount > 0) {
+      const selectedAcronyms = getRandomItems(corporateAcronyms, acronymCount);
+      result = result.replace(/\. $/, '') + ' ' + selectedAcronyms.join(' ') + '.';
+    }
   }
   
-  // Add emojis based on intensity
+  // Add emojis based on intensity and persona preference
   if (includeEmojis) {
     const emojiCount = Math.floor(adjustedIntensity / 2);
-    const selectedEmojis = getRandomItems(emojis, emojiCount);
+    const selectedEmojis = getRandomItems(personaBiases.emojis.length > 0 ? personaBiases.emojis : emojis, emojiCount);
     if (selectedEmojis.length > 0) {
       result += ' ' + selectedEmojis.join(' ');
     }
   }
   
   // Add unhinged content as an easter egg (10% chance or high intensity)
+  // Using persona-specific style
   if (Math.random() < 0.1 || adjustedIntensity > 8) {
-    const unhingedPhrases = [
-      " DISRUPT OR DIE!!!",
-      " This is what separates the unicorns from the ponies.",
-      " My mentor at McKinsey always said this.",
-      " I learned this at Harvard Business School and it changed everything.",
-      " This strategy literally prints money.",
-      " The competition won't know what hit them!",
-      " This is the secret sauce the top 1% doesn't want you to know about.",
-      " THINK OUTSIDE THE BOX UNTIL THE BOX DOESN'T EXIST ANYMORE!",
-      " I've made millions with this exact framework."
-    ];
-    result += getRandomElement(unhingedPhrases);
+    // Each persona has their own "wisdoms"
+    const unhingedPhrases = persona.getWisdoms();
+    result += " " + getRandomElement(unhingedPhrases);
   }
   
   return {
     content: result,
-    // Format for social media sharing
-    socialContent: formatForSocialMedia(result, businessSchoolMode)
+    // Format for social media sharing using persona-specific formatting
+    socialContent: formatForSocialMedia(result, persona)
   };
 }
 
 // Format content for social media sharing
-function formatForSocialMedia(content, businessSchoolMode) {
+function formatForSocialMedia(content, persona) {
+  // Get persona-specific hashtags
+  const personaBiases = persona.getBiases();
+  const hashtags = personaBiases.hashtags || hashTags;
+  
   // Get 3-5 random hashtags
   const tagCount = Math.floor(Math.random() * 3) + 3;
-  const selectedTags = getRandomItems(hashTags, tagCount);
+  const selectedTags = getRandomItems(hashtags, tagCount);
   
-  // Add "MBA" or "Harvard Business School" references in business school mode
-  const prefixes = [
-    "Just shared this with my MBA cohort:",
-    "As I was telling my leadership team today:",
-    "My key takeaway from today's strategy session:",
-    "The insight that transformed our Q3 results:",
-    "What I wish I knew before getting my MBA:"
-  ];
+  // Get persona-specific intros
+  const intros = persona.getIntros();
+  const prefix = getRandomElement(intros);
   
-  const businessSchoolPrefixes = [
-    "What I learned at Harvard Business School:",
-    "My professor at Wharton always emphasized:",
-    "Case study insight of the day:",
-    "The framework that got me through my MBA:",
-    "From my business school capstone project:"
-  ];
+  // Get persona-specific wisdoms
+  const wisdoms = persona.getWisdoms();
+  const wisdom = getRandomElement(wisdoms);
   
-  const prefix = businessSchoolMode 
-    ? getRandomElement(businessSchoolPrefixes) 
-    : getRandomElement(prefixes);
+  // Format the post based on persona style
+  const personaStyle = persona.getStyle();
   
   // Format the post
   let post = `${prefix}\n\n"${content}"\n\n`;
   
-  // Add some corporate wisdom
-  const wisdoms = [
-    "This is how you build real competitive advantage.",
-    "The businesses that understand this will thrive in the next decade.",
-    "Are you making this critical strategic pivot, or being left behind?",
-    "This is the difference between 5% and 500% growth.",
-    "My mentor taught me this and it changed everything."
-  ];
+  // Add corporate wisdom
+  post += wisdom + "\n\n";
   
-  post += getRandomElement(wisdoms) + "\n\n";
+  // Add hashtags
   post += selectedTags.join(" ");
   
   return post;
-} 
+}

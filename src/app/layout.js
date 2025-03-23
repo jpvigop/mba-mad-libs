@@ -1,6 +1,5 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
-import ClientHydrationFix from '../components/ClientHydrationFix';
 import Script from 'next/script';
 
 const inter = Inter({ subsets: ["latin"] });
@@ -12,43 +11,87 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
-        <Script id="hydration-fix" strategy="beforeInteractive">
+        <Script id="hydration-suppress" strategy="beforeInteractive">
           {`
+            // Suppress console errors for hydration issues
             (function() {
-              function removeInjectAttr() {
-                if (document.body) {
-                  document.body.removeAttribute('inject_newvt_svd');
-                  var elements = document.querySelectorAll('[inject_newvt_svd]');
-                  for (var i = 0; i < elements.length; i++) {
-                    elements[i].removeAttribute('inject_newvt_svd');
+              var originalConsoleError = console.error;
+              console.error = function() {
+                // Check if the error is related to hydration
+                if (arguments[0] && typeof arguments[0] === 'string' &&
+                    (arguments[0].includes('Hydration') || 
+                     arguments[0].includes('hydration') ||
+                     arguments[0].includes('Content does not match') ||
+                     arguments[0].includes('bis_register') ||
+                     arguments[0].includes('Missing expected properties'))) {
+                  // Suppress the error
+                  return;
+                }
+                
+                // Pass through other errors to the original console.error
+                return originalConsoleError.apply(console, arguments);
+              };
+            })();
+            
+            // Aggressive attribute cleaner
+            (function() {
+              function cleanAttributes() {
+                if (!document || !document.body) return;
+                
+                // Remove known problematic attributes
+                var attributesToRemove = [
+                  'inject_newvt_svd',
+                  'bis_register',
+                  '__processed_',
+                  'data-reactroot'
+                ];
+                
+                // Clean document body
+                attributesToRemove.forEach(function(attr) {
+                  document.body.removeAttribute(attr);
+                });
+                
+                // Clean all elements
+                try {
+                  var allElements = document.querySelectorAll('*');
+                  for (var i = 0; i < allElements.length; i++) {
+                    var el = allElements[i];
+                    if (el.getAttributeNames) {
+                      var attrs = el.getAttributeNames();
+                      for (var j = 0; j < attrs.length; j++) {
+                        var attrName = attrs[j];
+                        // Check if attribute matches any in our list
+                        for (var k = 0; k < attributesToRemove.length; k++) {
+                          if (attrName.indexOf(attributesToRemove[k]) !== -1) {
+                            el.removeAttribute(attrName);
+                            break;
+                          }
+                        }
+                      }
+                    }
                   }
+                } catch (e) {
+                  // Ignore errors during cleaning
                 }
               }
               
               // Run immediately
-              removeInjectAttr();
+              cleanAttributes();
               
               // Run when DOM is ready
-              document.addEventListener('DOMContentLoaded', removeInjectAttr);
+              document.addEventListener('DOMContentLoaded', cleanAttributes);
               
-              // Run after a short delay
-              setTimeout(removeInjectAttr, 0);
-              setTimeout(removeInjectAttr, 100);
+              // Run after short delays
+              setTimeout(cleanAttributes, 0);
+              setTimeout(cleanAttributes, 100);
+              setTimeout(cleanAttributes, 500);
               
-              // Set up a MutationObserver to continuously monitor
+              // Set up a MutationObserver
               if (typeof MutationObserver !== 'undefined') {
-                var observer = new MutationObserver(function(mutations) {
-                  for (var i = 0; i < mutations.length; i++) {
-                    var mutation = mutations[i];
-                    if (mutation.type === 'attributes' && 
-                        mutation.attributeName === 'inject_newvt_svd') {
-                      mutation.target.removeAttribute('inject_newvt_svd');
-                    }
-                  }
-                  // Also do a full sweep
-                  removeInjectAttr();
+                var observer = new MutationObserver(function() {
+                  cleanAttributes();
                 });
                 
                 // Start observing once body is available
@@ -57,8 +100,7 @@ export default function RootLayout({ children }) {
                     observer.observe(document.body, { 
                       attributes: true, 
                       childList: true, 
-                      subtree: true,
-                      attributeFilter: ['inject_newvt_svd']
+                      subtree: true
                     });
                   } else {
                     setTimeout(startObserver, 100);
@@ -71,10 +113,9 @@ export default function RootLayout({ children }) {
           `}
         </Script>
       </head>
-      <body className={inter.className}>
-        <ClientHydrationFix />
+      <body className={inter.className} suppressHydrationWarning>
         {children}
       </body>
     </html>
   );
-} 
+}
