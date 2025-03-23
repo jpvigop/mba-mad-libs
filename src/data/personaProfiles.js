@@ -7,6 +7,24 @@ export const personaProfiles = {
     tooltip: "Endorsed by 3.5K consultants you've never met.",
     timePosted: "2h"
   },
+  "Harvard MBA": {
+    name: "Alex Morgan",
+    title: "MBA '24 @ Harvard Business School",
+    tooltip: "Disrupting industries with frameworks learned in 90-min case studies.",
+    timePosted: "3h"
+  },
+  "Crypto Bro": {
+    name: "Ryan Nakamoto",
+    title: "Founder @ DecentraCap Ventures",
+    tooltip: "HODL till the moon! 🚀 We're still early. Web3 visionary since 2021.",
+    timePosted: "30m"
+  },
+  "ex McKinsey": {
+    name: "Jordan Williams",
+    title: "Former Associate Partner @ McKinsey",
+    tooltip: "Let me tell you about my time at The Firm™. Did I mention I was at McKinsey?",
+    timePosted: "1h"
+  },
   "Sam Altman": {
     name: "Sam Altman",
     title: "CEO @ OpenAI",
